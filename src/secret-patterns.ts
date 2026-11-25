@@ -63,6 +63,13 @@ export const SECRET_PATTERNS: readonly SecretPattern[] = [
     message: 'Google API key (public by design, e.g. Firebase)',
     fix: "Fine to ship, but restrict it to your app's bundle ID / package name and to the APIs it needs in Google Cloud Console.",
   },
+  {
+    id: 'secret/google-oauth-client-secret',
+    severity: 'error',
+    pattern: /(?<![\w-])GOCSPX-[A-Za-z0-9_-]{28}(?![\w-])/g,
+    message: 'Google OAuth client secret',
+    fix: `OAuth client secrets belong on your server: ${MOVE_TO_SERVER}`,
+  },
   // ↑ Add new patterns here, above this line.
 ];
 // Public by design, never reported: Stripe publishable keys (pk_), Supabase anon keys, Sentry DSNs, RevenueCat public SDK keys.
