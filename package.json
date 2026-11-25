@@ -1,18 +1,20 @@
 {
   "name": "app-release-lint",
-  "version": "0.1.1",
-  "description": "Lint a built iOS or Android app (.ipa, .aab) for release mistakes: leaked secrets, staging and localhost servers, source maps, debug flags and staging deep links.",
+  "version": "0.2.0",
+  "description": "Lint a built iOS or Android app (.ipa, .aab, .apk) for release mistakes: leaked secrets, staging and localhost servers, source maps, debug flags and staging deep links.",
   "keywords": [
     "react-native",
     "expo",
     "ipa",
     "aab",
+    "apk",
     "release",
     "lint",
     "secrets",
     "deep-links",
     "hermes",
-    "ci"
+    "ci",
+    "sarif"
   ],
   "license": "MIT",
   "author": "Harpreet Kumar",

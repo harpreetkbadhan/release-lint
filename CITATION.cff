@@ -5,7 +5,7 @@ type: software
 authors:
   - given-names: Harpreet
     family-names: Kumar
-version: 0.1.1
+version: 0.2.0
 date-released: 2026-11-25
 license: MIT
 repository-code: https://github.com/harpreetkbadhan/release-lint

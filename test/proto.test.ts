@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseProtoXml } from '../src/formats/proto.js';
 import { ReleaseLintError } from '../src/types.js';
-import { protoXml } from './helpers/fixtures.js';
+import { protoXml, type ProtoAttr } from './helpers/fixtures.js';
 
 const manifest = protoXml({
   name: 'manifest',
@@ -58,6 +58,23 @@ describe('parseProtoXml', () => {
 
   it('rejects a buffer without a root element', () => {
     expect(() => parseProtoXml(Buffer.alloc(0))).toThrow(ReleaseLintError);
+  });
+
+  describe('hostile manifests (same rules as .apk)', () => {
+    const app = (attrs: ProtoAttr[]) => protoXml({ name: 'manifest', children: [{ name: 'application', attrs }] });
+
+    it('rejects an attribute without a namespace that is named like an android one', () => {
+      expect(() => parseProtoXml(app([{ name: 'debuggable', android: true, bool: true }, { name: 'android:debuggable', value: 'false' }]))).toThrow(ReleaseLintError);
+    });
+
+    it('rejects the same attribute twice', () => {
+      expect(() => parseProtoXml(app([{ name: 'debuggable', android: true, bool: true }, { name: 'debuggable', android: true, bool: false }]))).toThrow(ReleaseLintError);
+    });
+
+    it('uses the compiled value, like Android, when the source text disagrees', () => {
+      const root = parseProtoXml(app([{ name: 'debuggable', android: true, value: 'false', bool: true }]));
+      expect(root.children[0]?.attributes['android:debuggable']).toBe('true');
+    });
   });
 
   it('rejects nesting deeper than the limit', () => {

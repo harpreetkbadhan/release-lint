@@ -1,6 +1,6 @@
 ---
 name: release-lint
-description: Check a built iOS or Android app (.ipa or .aab) for release mistakes before it ships - leaked secrets in the JS bundle or Expo config, staging or localhost servers, staging deep-link domains in the signed entitlements or manifest, debuggable or development-signed builds, and shipped source maps. Use when the user asks to check, lint or verify a release build, before an App Store or Google Play upload, or after an EAS / Gradle / Xcode release build.
+description: Check a built iOS or Android app (.ipa, .aab or .apk) for release mistakes before it ships - leaked secrets in the JS bundle or Expo config, staging or localhost servers, staging deep-link domains in the signed entitlements or manifest, debuggable or development-signed builds, and shipped source maps. Use when the user asks to check, lint or verify a release build, before an App Store or Google Play upload, or after an EAS / Gradle / Xcode release build.
 ---
 
 # release-lint
@@ -11,7 +11,7 @@ Only scan apps the user owns or has permission to audit. Never scan third-party 
 
 ## Run it
 
-1. Find the release file. Common places: the path the user gives, `*.ipa` / `*.aab` in the project root, `android/app/build/outputs/bundle/release/app-release.aab`, or the `--output` of `eas build --local`. If you cannot find one, ask; do not build one unless the user asks.
+1. Find the release file. Common places: the path the user gives, `*.ipa` / `*.aab` / `*.apk` in the project root, `android/app/build/outputs/bundle/release/app-release.aab`, `android/app/build/outputs/apk/release/app-release.apk`, or the `--output` of `eas build --local`. If you cannot find one, ask; do not build one unless the user asks.
 2. Run:
 
    ```sh

@@ -1,9 +1,10 @@
 import { readFileSync } from 'node:fs';
-import { appendFile, readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { appendFile, readFile, writeFile } from 'node:fs/promises';
+import { isAbsolute, relative, resolve, sep } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import { readApp } from './formats/app.js';
-import { formatAnnotations, formatJson, formatSummary, formatText } from './report.js';
+import { formatAnnotations, formatJson, formatSarif, formatSummary, formatText } from './report.js';
 import { runRules } from './rules.js';
 import { ReleaseLintError, SEVERITIES, type AppModel, type Finding, type Severity } from './types.js';
 
@@ -15,7 +16,7 @@ const FAIL_LEVELS: readonly string[] = [...SEVERITIES, 'none'];
 const CONFIG_KEYS = ['failOn', 'allowHosts', 'ignore'];
 const VERSION = (JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }).version;
 
-const USAGE = `Usage: release-lint <app.ipa|app.aab> [options]
+const USAGE = `Usage: release-lint <app.ipa|app.aab|app.apk> [options]
 
 Checks a built iOS or Android app for release mistakes: leaked secrets, staging and
 localhost servers, source maps, debug flags and staging deep links.
@@ -23,6 +24,7 @@ Only scan apps you own or have permission to audit.
 
 Options:
   --json               Print the report as JSON
+  --sarif <path>       Also write a SARIF 2.1.0 report (GitHub code scanning)
   --fail-on <level>    Exit 1 when a finding is at least: error (default), warning, info, none
   --config <path>      Config file (default: ./${DEFAULT_CONFIG} if it exists)
   --ignore <rule>      Skip a rule, e.g. host/non-production or secret/* (repeatable)
@@ -78,6 +80,7 @@ function parse(argv: string[]) {
         config: { type: 'string' },
         ignore: { type: 'string', multiple: true },
         'no-color': { type: 'boolean' },
+        sarif: { type: 'string' },
         help: { type: 'boolean', short: 'h' },
         version: { type: 'boolean', short: 'v' },
       },
@@ -105,6 +108,9 @@ async function run(argv: string[], io: Io): Promise<number> {
     throw new ReleaseLintError(`--fail-on must be one of ${FAIL_LEVELS.join(', ')}`);
   }
 
+  if (values.sarif === '') {
+    throw new ReleaseLintError('--sarif needs a file path');
+  }
   if (values.config === '') {
     throw new ReleaseLintError('--config needs a file path');
   }
@@ -119,10 +125,28 @@ async function run(argv: string[], io: Io): Promise<number> {
   const findings = runRules(app, { allowHosts: config.allowHosts }).filter((f) => !isIgnored(f, ignore));
 
   io.stdout.write(values.json ? formatJson(app, findings, VERSION) : formatText(app, findings, { color: io.color && !values['no-color'], version: VERSION }));
+  if (values.sarif !== undefined) {
+    await writeSarif(io.cwd, values.sarif, positionals[0] ?? '', findings);
+  }
   if (!values.json && io.env?.['GITHUB_ACTIONS'] === 'true') {
     await reportToGitHub(app, findings, io);
   }
   return fails(findings, failOn) ? EXIT_FINDINGS : EXIT_OK;
+}
+
+/** The app file as SARIF expects it: relative to the working directory (the repository in CI), or a file:// URL. */
+function artifactUri(cwd: string, file: string): string {
+  const absolute = resolve(cwd, file);
+  const rel = relative(cwd, absolute);
+  return rel && !rel.startsWith('..') && !isAbsolute(rel) ? rel.split(sep).join('/') : pathToFileURL(absolute).href;
+}
+
+async function writeSarif(cwd: string, path: string, file: string, findings: Finding[]): Promise<void> {
+  try {
+    await writeFile(resolve(cwd, path), formatSarif(findings, VERSION, artifactUri(cwd, file)));
+  } catch (error) {
+    throw new ReleaseLintError(`could not write the SARIF file ${path} (${(error as NodeJS.ErrnoException).code ?? (error as Error).message})`);
+  }
 }
 
 /** Annotations on the run page and a table in the job summary. A summary write error never hides the result. */

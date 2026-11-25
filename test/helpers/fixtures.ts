@@ -176,6 +176,10 @@ export interface ProtoAttr {
   bool?: boolean;
   /** A resource reference such as @string/host. */
   refId?: number;
+  /** Binary XML only: a raw string stored next to a typed value (they can disagree). */
+  raw?: string;
+  /** Binary XML only: the resource ID written to the resource map for this attribute name. */
+  resId?: number;
 }
 
 export interface ProtoEl {
@@ -220,6 +224,116 @@ export function protoXml(el: ProtoEl): Buffer {
     numberField(99, 7),
   ]);
   return Buffer.concat([field(1, element), field(3, Buffer.concat([numberField(1, 1)]))]);
+}
+
+/** android:* attribute resource IDs, as `aapt2 dump xmltree` shows them for a real release APK. */
+export const ANDROID_ATTR_IDS: Record<string, number> = {
+  label: 0x01010001,
+  name: 0x01010003,
+  debuggable: 0x0101000f,
+  scheme: 0x01010027,
+  host: 0x01010028,
+  versionCode: 0x0101021b,
+  versionName: 0x0101021c,
+  usesCleartextTraffic: 0x010104ec,
+  autoVerify: 0x010104ee,
+};
+
+const u16 = (n: number) => {
+  const b = Buffer.alloc(2);
+  b.writeUInt16LE(n);
+  return b;
+};
+const u32 = (n: number) => {
+  const b = Buffer.alloc(4);
+  b.writeUInt32LE(n >>> 0);
+  return b;
+};
+const chunk = (type: number, headerSize: number, header: Buffer, body: Buffer = Buffer.alloc(0)) =>
+  Buffer.concat([u16(type), u16(headerSize), u32(8 + header.length + body.length), header, body]);
+const NO_INDEX = 0xffffffff;
+
+/**
+ * Encodes an element as Android binary XML (the AndroidManifest.xml in an .apk): a string pool (UTF-16 like aapt2,
+ * or UTF-8), a resource map for the android: attribute names, namespace and element chunks. `stripNames` blanks the
+ * attribute names, as some obfuscators do, leaving only the resource IDs.
+ */
+export function axml(root: ProtoEl, { utf8 = false, stripNames = false }: { utf8?: boolean; stripNames?: boolean } = {}): Buffer {
+  const androidNames: string[] = [];
+  const resIds = new Map<string, number>();
+  const others: string[] = [ANDROID_NS, 'android'];
+  const walk = (el: ProtoEl) => {
+    others.push(el.name);
+    for (const a of el.attrs ?? []) {
+      if (a.android && !androidNames.includes(a.name)) androidNames.push(a.name);
+      if (!a.android) others.push(a.name);
+      if (a.value !== undefined) others.push(a.value);
+      if (a.raw !== undefined) others.push(a.raw);
+      if (a.android && a.resId !== undefined) resIds.set(a.name, a.resId);
+    }
+    el.children?.forEach(walk);
+  };
+  walk(root);
+  const pool = [...androidNames.map((n) => (stripNames ? '' : n)), ...new Set(others)];
+  const index = (s: string, android = false) => (android ? androidNames.indexOf(s) : pool.indexOf(s, androidNames.length));
+
+  const encoded = pool.map((s) => {
+    if (utf8) {
+      const bytes = Buffer.from(s, 'utf8');
+      return Buffer.concat([Buffer.from([s.length, bytes.length]), bytes, Buffer.from([0])]);
+    }
+    return Buffer.concat([u16(s.length), Buffer.from(s, 'utf16le'), u16(0)]);
+  });
+  const offsets: number[] = [];
+  let at = 0;
+  for (const e of encoded) {
+    offsets.push(at);
+    at += e.length;
+  }
+  const data = Buffer.concat(encoded);
+  const padded = Buffer.concat([data, Buffer.alloc((4 - (data.length % 4)) % 4)]);
+  const stringsStart = 28 + pool.length * 4;
+  const poolHeader = Buffer.concat([u32(pool.length), u32(0), u32(utf8 ? 0x100 : 0), u32(stringsStart), u32(0)]);
+  const stringPool = chunk(0x0001, 28, poolHeader, Buffer.concat([...offsets.map(u32), padded]));
+  const resourceMap = chunk(0x0180, 8, Buffer.concat(androidNames.map((n) => u32(resIds.get(n) ?? ANDROID_ATTR_IDS[n] ?? 0))));
+
+  const nsBody = Buffer.concat([u32(index('android')), u32(index(ANDROID_NS))]);
+  const nodeHeader = Buffer.concat([u32(1), u32(NO_INDEX)]);
+  const elements: Buffer[] = [];
+  const emit = (el: ProtoEl) => {
+    const attrs = (el.attrs ?? []).map((a) => {
+      const ns = a.android ? index(ANDROID_NS) : NO_INDEX;
+      const name = index(a.name, a.android);
+      let raw = NO_INDEX;
+      let type = 0x03;
+      let value = 0;
+      if (a.value !== undefined) {
+        raw = index(a.value);
+        value = raw;
+      } else if (a.bool !== undefined) {
+        type = 0x12;
+        value = a.bool ? 0xffffffff : 0;
+      } else if (a.refId !== undefined) {
+        type = 0x01;
+        value = a.refId;
+      }
+      if (a.raw !== undefined) raw = index(a.raw);
+      return Buffer.concat([u32(ns), u32(name), u32(raw), u16(8), Buffer.from([0, type]), u32(value)]);
+    });
+    const ext = Buffer.concat([u32(NO_INDEX), u32(index(el.name)), u16(20), u16(20), u16(attrs.length), u16(0), u16(0), u16(0)]);
+    elements.push(chunk(0x0102, 16, nodeHeader, Buffer.concat([ext, ...attrs])));
+    el.children?.forEach(emit);
+    elements.push(chunk(0x0103, 16, nodeHeader, Buffer.concat([u32(NO_INDEX), u32(index(el.name))])));
+  };
+  emit(root);
+  const body = Buffer.concat([
+    stringPool,
+    resourceMap,
+    chunk(0x0100, 16, nodeHeader, nsBody),
+    ...elements,
+    chunk(0x0101, 16, nodeHeader, nsBody),
+  ]);
+  return Buffer.concat([u16(0x0003), u16(8), u32(8 + body.length), body]);
 }
 
 type Files = Record<string, Uint8Array>;
@@ -269,6 +383,14 @@ export function aab({ manifest = androidManifest(), bundle, expoConfig, extra = 
   const files: Files = { 'base/manifest/AndroidManifest.xml': protoXml(manifest), 'BundleConfig.pb': new Uint8Array(0), ...extra };
   if (bundle !== undefined) files['base/assets/index.android.bundle'] = Buffer.from(bundle);
   if (expoConfig !== undefined) files['base/assets/app.config'] = Buffer.from(JSON.stringify(expoConfig));
+  return zipSync(files);
+}
+
+/** Builds a synthetic .apk: binary XML manifest at the root, bundle and Expo config under assets/. */
+export function apk({ manifest = androidManifest(), bundle, expoConfig, extra = {} }: AabOptions = {}): Uint8Array {
+  const files: Files = { 'AndroidManifest.xml': axml(manifest), 'classes.dex': new Uint8Array(0), ...extra };
+  if (bundle !== undefined) files['assets/index.android.bundle'] = Buffer.from(bundle);
+  if (expoConfig !== undefined) files['assets/app.config'] = Buffer.from(JSON.stringify(expoConfig));
   return zipSync(files);
 }
 

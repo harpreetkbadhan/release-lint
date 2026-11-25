@@ -1,5 +1,5 @@
 name: release-lint
-description: Lint a built iOS or Android app (.ipa, .aab) for release mistakes before it ships
+description: Lint a built iOS or Android app (.ipa, .aab, .apk) for release mistakes before it ships
 author: Harpreet Kumar
 branding:
   icon: shield
@@ -7,7 +7,7 @@ branding:
 
 inputs:
   file:
-    description: Path to the built .ipa or .aab
+    description: Path to the built .ipa, .aab or .apk
     required: true
   fail-on:
     description: Fail the step when a finding is at least this severe (error, warning, info, none)
@@ -15,6 +15,10 @@ inputs:
     default: error
   config:
     description: Path to a release-lint.config.json (default ./release-lint.config.json if it exists)
+    required: false
+    default: ''
+  sarif:
+    description: Also write a SARIF 2.1.0 report to this path, for github/codeql-action/upload-sarif
     required: false
     default: ''
   version:
@@ -32,8 +36,10 @@ runs:
         RELEASE_LINT_FILE: ${{ inputs.file }}
         RELEASE_LINT_FAIL_ON: ${{ inputs.fail-on }}
         RELEASE_LINT_CONFIG: ${{ inputs.config }}
+        RELEASE_LINT_SARIF: ${{ inputs.sarif }}
         RELEASE_LINT_VERSION: ${{ inputs.version }}
       run: |
         args=("$RELEASE_LINT_FILE" --fail-on "$RELEASE_LINT_FAIL_ON")
         if [ -n "$RELEASE_LINT_CONFIG" ]; then args+=(--config "$RELEASE_LINT_CONFIG"); fi
+        if [ -n "$RELEASE_LINT_SARIF" ]; then args+=(--sarif "$RELEASE_LINT_SARIF"); fi
         npx --yes "app-release-lint@$RELEASE_LINT_VERSION" "${args[@]}"

@@ -2,7 +2,7 @@ import { zipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
 import { readApp } from '../src/formats/app.js';
 import { ReleaseLintError } from '../src/types.js';
-import { aab, androidManifest, hbc, ipa, writeTemp } from './helpers/fixtures.js';
+import { aab, androidManifest, apk, hbc, ipa, writeTemp } from './helpers/fixtures.js';
 
 const text = (value: string) => Buffer.from(value);
 const DOMAINS = 'com.apple.developer.associated-domains';
@@ -142,10 +142,50 @@ describe('readApp (.aab)', () => {
   });
 });
 
+describe('readApp (.apk)', () => {
+  it('builds the app model from the binary XML manifest, bundle and Expo config', async () => {
+    const manifest = androidManifest(
+      [
+        { name: 'debuggable', android: true, bool: true },
+        { name: 'usesCleartextTraffic', android: true, bool: false },
+      ],
+      [
+        {
+          name: 'activity',
+          children: [
+            {
+              name: 'intent-filter',
+              attrs: [{ name: 'autoVerify', android: true, bool: true }],
+              children: [{ name: 'data', attrs: [{ name: 'scheme', android: true, value: 'https' }, { name: 'host', android: true, value: 'staging.example.com' }] }],
+            },
+          ],
+        },
+      ],
+    );
+    const path = await writeTemp(
+      'demo.apk',
+      apk({ manifest, bundle: hbc({ strings: ['https://api.example.com'], identifiers: ['x'] }), expoConfig: { extra: {} }, extra: { 'assets/index.android.bundle.map': text('{}') } }),
+    );
+    expect(await readApp(path)).toEqual({
+      platform: 'android',
+      file: 'demo.apk',
+      appId: 'com.example.demo',
+      version: '1.4.0',
+      build: '42',
+      flags: { debuggable: true, usesCleartextTraffic: false },
+      deepLinks: [{ host: 'staging.example.com', kind: 'app-link', file: 'AndroidManifest.xml' }],
+      bundle: { file: 'assets/index.android.bundle', kind: 'hermes', hermesVersion: 98, approximate: false, strings: ['https://api.example.com', 'x'] },
+      expoConfig: { file: 'assets/app.config', value: { extra: {} } },
+      sourceMaps: ['assets/index.android.bundle.map'],
+      problems: [],
+    });
+  });
+});
+
 describe('readApp (unsupported files)', () => {
-  it('says APK support is not there yet', async () => {
-    const path = await writeTemp('demo.apk', zipSync({ 'AndroidManifest.xml': text('x'), 'classes.dex': text('x') }));
-    await expect(readApp(path)).rejects.toThrow(/\.apk/);
+  it('rejects an .apk whose manifest is not binary XML', async () => {
+    const path = await writeTemp('demo.apk', zipSync({ 'AndroidManifest.xml': text('<manifest/>'), 'classes.dex': text('x') }));
+    await expect(readApp(path)).rejects.toThrow(/binary XML/);
   });
 
   it('rejects a zip that is not an app', async () => {

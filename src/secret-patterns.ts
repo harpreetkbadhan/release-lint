@@ -64,6 +64,13 @@ export const SECRET_PATTERNS: readonly SecretPattern[] = [
     fix: "Fine to ship, but restrict it to your app's bundle ID / package name and to the APIs it needs in Google Cloud Console.",
   },
   {
+    id: 'secret/google-oauth-client-secret',
+    severity: 'error',
+    pattern: /(?<![\w-])GOCSPX-[A-Za-z0-9_-]{28}(?![\w-])/g,
+    message: 'Google OAuth client secret',
+    fix: `OAuth client secrets belong on your server: ${MOVE_TO_SERVER}`,
+  },
+  {
     id: 'secret/mapbox-secret-token',
     severity: 'error',
     pattern: /(?<![\w-])sk\.eyJ[A-Za-z0-9_-]{20,1024}\.[A-Za-z0-9_-]{20,256}(?![\w-])/g,

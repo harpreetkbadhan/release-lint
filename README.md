@@ -5,7 +5,7 @@
 <h1 align="center">release-lint</h1>
 
 <p align="center">
-  <b>Catch release mistakes in your built <code>.ipa</code> / <code>.aab</code> before you ship.</b><br>
+  <b>Catch release mistakes in your built <code>.ipa</code> / <code>.aab</code> / <code>.apk</code> before you ship.</b><br>
   Leaked keys, staging and localhost URLs, staging deep links, debug builds and source maps.
 </p>
 
@@ -34,7 +34,7 @@
 </p>
 
 ```sh
-npx app-release-lint app-release.ipa     # or app-release.aab
+npx app-release-lint app-release.ipa     # or .aab / .apk
 ```
 
 🔑 secret keys · 🌐 staging / localhost / LAN URLs · 🔗 staging deep links · 🐞 debug builds · 🗺️ source maps
@@ -50,7 +50,7 @@ a staging URL slips into the build easily, and the built file is where you can s
 
 | You have | Do this |
 |---|---|
-| A built `.ipa` or `.aab` | `npx app-release-lint path/to/app.aab` |
+| A built `.ipa`, `.aab` or `.apk` | `npx app-release-lint path/to/app.aab` |
 | No app at hand | [Scan the demo build](#try-it-in-30-seconds) (30 seconds) |
 | A CI pipeline | [Add the GitHub Action](#in-ci) (one line) |
 | EAS Build | [Add the build hook](#in-ci) |
@@ -105,7 +105,7 @@ release-lint 0.1.1 · app-release.aab · Android · com.example.releaselintdemo 
 
 | Rule | Severity | What |
 |---|---|---|
-| `secret/*` | error | Stripe secret keys, AWS keys, private keys, OpenAI and Anthropic keys, GitHub and Slack tokens, Slack webhooks, SendGrid keys, Supabase `service_role` keys, Mapbox secret tokens, in the JS bundle and the Expo config (`extra`) |
+| `secret/*` | error | Stripe secret keys, AWS keys, private keys, OpenAI and Anthropic keys, GitHub and Slack tokens, Slack webhooks, SendGrid keys, Supabase `service_role` keys, Google OAuth client secrets, Mapbox secret tokens, in the JS bundle and the Expo config (`extra`) |
 | `secret/stripe-test-secret-key` | warning | A Stripe test secret key |
 | `secret/google-api-key` | info | Google / Firebase API keys: public by design, but should be restricted |
 | `deeplink/non-production-host` | error | Staging, dev, localhost or private hosts in the **signed** iOS associated domains or Android intent filters |
@@ -124,9 +124,10 @@ receipt validation, PayPal, Plaid, …) are not reported either.
 ## Usage
 
 ```
-release-lint <app.ipa|app.aab> [options]
+release-lint <app.ipa|app.aab|app.apk> [options]
 
   --json               Print the report as JSON
+  --sarif <path>       Also write a SARIF 2.1.0 report (GitHub code scanning)
   --fail-on <level>    Exit 1 when a finding is at least: error (default), warning, info, none
   --config <path>      Config file (default: ./release-lint.config.json if it exists)
   --ignore <rule>      Skip a rule, e.g. host/non-production or secret/* (repeatable)
@@ -151,6 +152,26 @@ Findings appear as annotations on the run page and as a table in the job summary
 (20.19 or newer; add `actions/setup-node` first if yours is older).
 
 [![release-lint annotations on a GitHub Actions run of the demo app](docs/ci-annotations.png)](https://github.com/harpreetkbadhan/release-lint-demo/actions/runs/45593915116)
+
+**GitHub code scanning:** write SARIF and upload it, and findings also appear under **Security → Code scanning**,
+tracked across runs:
+
+```yaml
+permissions:
+  contents: read
+  security-events: write
+
+steps:
+  # … build the release file …
+  - uses: harpreetkbadhan/release-lint@v0
+    with:
+      file: android/app/build/outputs/bundle/release/app-release.aab
+      sarif: release-lint.sarif
+  - uses: github/codeql-action/upload-sarif@v4
+    if: always() # upload even when release-lint failed the step
+    with:
+      sarif_file: release-lint.sarif
+```
 
 **Any other CI:** `npx app-release-lint@0 path/to/app.aab`. Exit code 1 fails the step.
 
@@ -212,7 +233,7 @@ no runtime dependencies. It parses:
 - the zip container (including zip64), reading only the handful of entries it needs;
 - `Info.plist` (binary and XML) and the **entitlements inside the code signature** of the iOS executable, which are the
   values the app was actually signed with (`embedded.mobileprovision` only lists what the profile allows);
-- the protobuf `AndroidManifest.xml` of an `.aab`;
+- the protobuf `AndroidManifest.xml` of an `.aab`, and the binary XML one of an `.apk`;
 - the string table of a Hermes bytecode bundle, or a plain JavaScript bundle, and the embedded Expo config.
 
 ## Why not MobSF, gitleaks or trufflehog?
@@ -221,12 +242,11 @@ no runtime dependencies. It parses:
 a large pentest report. gitleaks and trufflehog scan source and git history, not built apps. release-lint does one
 narrower job: a few seconds, no setup, in any CI step, and a short list of release mistakes with a fix for each.
 
-## Limits (0.1.x)
+## Limits (0.2)
 
-- `.apk` files are not supported yet; scan the `.aab` you upload to Google Play.
 - Android hosts written as resource references (`@string/…`) are reported but not resolved yet.
 - Native code (`classes.dex`, the iOS executable's strings) is not scanned for secrets: SDKs make that too noisy.
-- Permissions checks, SARIF output and online validation of `apple-app-site-association` / `assetlinks.json` are planned.
+- Permission checks and online validation of `apple-app-site-association` / `assetlinks.json` are planned.
 
 ---
 

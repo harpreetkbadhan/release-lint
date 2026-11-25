@@ -1,6 +1,6 @@
 import { basename } from 'node:path';
 import { ReleaseLintError, type AppModel } from '../types.js';
-import { AAB_MANIFEST, readAab } from './android.js';
+import { AAB_MANIFEST, APK_MANIFEST, readAab, readApk } from './android.js';
 import { readIpa } from './ios.js';
 import { openZip } from './zip.js';
 
@@ -15,10 +15,10 @@ export async function readApp(path: string): Promise<AppModel> {
     if (zip.entries.has(AAB_MANIFEST)) {
       return await readAab(zip, file);
     }
-    if (zip.entries.has('AndroidManifest.xml')) {
-      throw new ReleaseLintError('.apk files are not supported yet (planned for v0.2). Scan the .aab you upload to Google Play.');
+    if (zip.entries.has(APK_MANIFEST)) {
+      return await readApk(zip, file);
     }
-    throw new ReleaseLintError('Not an .ipa or .aab file');
+    throw new ReleaseLintError('Not an .ipa, .aab or .apk file');
   } finally {
     await zip.close();
   }

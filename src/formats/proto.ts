@@ -1,4 +1,4 @@
-import { ReleaseLintError } from '../types.js';
+import { ReleaseLintError, type XmlElement } from '../types.js';
 
 const ANDROID_NS = 'http://schemas.android.com/apk/res/android';
 /** A real manifest nests about 6 levels deep; this stops hostile input from blowing the stack. */
@@ -7,13 +7,6 @@ const WIRE_VARINT = 0;
 const WIRE_64BIT = 1;
 const WIRE_LENGTH = 2;
 const WIRE_32BIT = 5;
-
-/** An XML element from an Android manifest. Android-namespace attributes are keyed `android:<name>`. */
-export interface XmlElement {
-  name: string;
-  attributes: Record<string, string>;
-  children: XmlElement[];
-}
 
 type Fields = Map<number, Array<number | Buffer>>;
 
@@ -77,7 +70,11 @@ function element(buf: Buffer, depth: number): XmlElement {
   const attributes: Record<string, string> = Object.create(null) as Record<string, string>;
   for (const attr of messages(fields, 4)) {
     const name = text(attr.get(2)?.[0]);
+    // A name never carries its own prefix ("android:debuggable" without a namespace is fake), and a real build
+    // never writes an attribute twice; either would let a crafted manifest hide a value from the scan.
+    if (name.includes(':')) throw new ReleaseLintError('The manifest has an invalid attribute name');
     const key = text(attr.get(1)?.[0]) === ANDROID_NS ? `android:${name}` : name;
+    if (key in attributes) throw new ReleaseLintError(`The manifest sets ${key} twice`);
     attributes[key] = attributeValue(attr);
   }
   const children = messages(fields, 5)
@@ -87,25 +84,25 @@ function element(buf: Buffer, depth: number): XmlElement {
   return { name: text(fields.get(3)?.[0]), attributes, children };
 }
 
-/** The source text if aapt2 kept it, else the compiled value: boolean, int, string or `@0x…` reference. */
+/** The compiled value, as Android reads it (boolean, int or `@0x…` reference); the source text only for strings. */
 function attributeValue(attr: Fields): string {
-  const source = text(attr.get(3)?.[0]);
-  if (source) {
-    return source;
-  }
   const item = messages(attr, 6)[0];
-  const ref = item && messages(item, 1)[0];
-  if (ref) {
-    return `@0x${Number(ref.get(2)?.[0] ?? 0).toString(16).padStart(8, '0')}`;
-  }
-  const str = item && (messages(item, 2)[0] ?? messages(item, 3)[0]);
-  if (str) {
-    return text(str.get(1)?.[0]);
-  }
   const prim = item && messages(item, 7)[0];
   if (prim?.has(8)) {
     return prim.get(8)?.[0] ? 'true' : 'false';
   }
   const int = prim?.get(6)?.[0] ?? prim?.get(7)?.[0];
-  return typeof int === 'number' ? String(int) : '';
+  if (typeof int === 'number') {
+    return String(int);
+  }
+  const ref = item && messages(item, 1)[0];
+  if (ref) {
+    return `@0x${Number(ref.get(2)?.[0] ?? 0).toString(16).padStart(8, '0')}`;
+  }
+  const source = text(attr.get(3)?.[0]);
+  if (source) {
+    return source;
+  }
+  const str = item && (messages(item, 2)[0] ?? messages(item, 3)[0]);
+  return str ? text(str.get(1)?.[0]) : '';
 }

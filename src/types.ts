@@ -26,6 +26,13 @@ export interface RuleOptions {
   allowHosts: readonly string[];
 }
 
+/** An XML element from an Android manifest. Android-namespace attributes are keyed `android:<name>`. */
+export interface XmlElement {
+  name: string;
+  attributes: Record<string, string>;
+  children: XmlElement[];
+}
+
 export interface DeepLink {
   /** The host, or an unresolved `@0x…` resource reference on Android. */
   host: string;

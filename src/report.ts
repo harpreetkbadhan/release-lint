@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { styleText } from 'node:util';
 import type { AppModel, Finding, Severity } from './types.js';
 
@@ -79,6 +80,44 @@ export function formatSummary(app: AppModel, findings: Finding[], version: strin
   );
   const summary = `${plural(count(findings, 'error'), 'error')} · ${plural(count(findings, 'warning'), 'warning')} · ${count(findings, 'info')} info`;
   return `${head}**${summary}**\n\n|   | Rule | Found | Where | Fix |\n|:-:|---|---|---|---|\n${rows.join('\n')}\n\n`;
+}
+
+const SARIF_LEVELS: Record<Severity, string> = { error: 'error', warning: 'warning', info: 'note' };
+const REPO_URI = 'https://github.com/harpreetkbadhan/release-lint';
+
+/**
+ * SARIF 2.1.0, the format GitHub code scanning reads. `artifactUri` is the scanned app file (relative to the repository
+ * when it is inside it); the entry inside the app goes in a logical location. Fingerprints keep alerts stable across runs.
+ */
+export function formatSarif(findings: Finding[], version: string, artifactUri: string): string {
+  const rules = [...new Map(findings.map((f) => [f.ruleId, f])).values()].map((f) => ({
+    id: f.ruleId,
+    name: f.ruleId,
+    shortDescription: { text: f.message },
+    help: { text: f.fix },
+    helpUri: `${REPO_URI}#what-it-checks`,
+    defaultConfiguration: { level: SARIF_LEVELS[f.severity] },
+  }));
+  const results = findings.map((f) => ({
+    ruleId: f.ruleId,
+    level: SARIF_LEVELS[f.severity],
+    message: { text: `${f.message}: ${f.evidence} (${f.location}). Fix: ${f.fix}` },
+    locations: [
+      {
+        physicalLocation: { artifactLocation: { uri: artifactUri }, region: { startLine: 1 } },
+        logicalLocations: [{ fullyQualifiedName: f.location }],
+      },
+    ],
+    partialFingerprints: {
+      'releaseLint/v1': createHash('sha256').update(`${f.ruleId}\0${f.location}\0${f.evidence}`).digest('hex').slice(0, 32),
+    },
+  }));
+  const sarif = {
+    $schema: 'https://json.schemastore.org/sarif-2.1.0.json',
+    version: '2.1.0',
+    runs: [{ tool: { driver: { name: 'release-lint', version, informationUri: REPO_URI, rules } }, results }],
+  };
+  return `${JSON.stringify(sarif, null, 2)}\n`;
 }
 
 /** The machine report for CI and agents. Evidence is masked exactly as in the text report. */
