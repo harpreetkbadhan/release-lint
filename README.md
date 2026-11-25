@@ -105,7 +105,7 @@ release-lint 0.1.1 · app-release.aab · Android · com.example.releaselintdemo 
 
 | Rule | Severity | What |
 |---|---|---|
-| `secret/*` | error | Stripe secret keys, AWS keys, private keys, OpenAI and Anthropic keys, GitHub and Slack tokens, Slack webhooks, SendGrid keys, Supabase `service_role` keys, in the JS bundle and the Expo config (`extra`) |
+| `secret/*` | error | Stripe secret keys, AWS keys, private keys, OpenAI and Anthropic keys, GitHub and Slack tokens, Slack webhooks, SendGrid keys, Supabase `service_role` keys, Google OAuth client secrets, in the JS bundle and the Expo config (`extra`) |
 | `secret/stripe-test-secret-key` | warning | A Stripe test secret key |
 | `secret/google-api-key` | info | Google / Firebase API keys: public by design, but should be restricted |
 | `deeplink/non-production-host` | error | Staging, dev, localhost or private hosts in the **signed** iOS associated domains or Android intent filters |
