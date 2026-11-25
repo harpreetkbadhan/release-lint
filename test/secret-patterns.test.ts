@@ -29,6 +29,7 @@ const CASES: Case[] = [
   { rule: 'secret/sendgrid-api-key', finds: 'SG' + '.' + 'a'.repeat(22) + '.' + 'b'.repeat(43), ignores: 'SG' + '.' + 'a'.repeat(10) },
   { rule: 'secret/supabase-service-role', finds: jwt({ role: 'service_role' }), ignores: jwt({ role: 'anon' }) },
   { rule: 'secret/google-api-key', finds: 'AI' + 'za' + 'a'.repeat(35), ignores: 'AI' + 'za' + 'a'.repeat(10) },
+  { rule: 'secret/mapbox-secret-token', finds: 'sk' + '.eyJ' + 'a'.repeat(60) + '.' + 'b'.repeat(22), ignores: 'pk' + '.eyJ' + 'a'.repeat(60) + '.' + 'b'.repeat(22) },
 ];
 
 const app = (strings: string[]): AppModel => ({

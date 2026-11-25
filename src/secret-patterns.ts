@@ -63,6 +63,14 @@ export const SECRET_PATTERNS: readonly SecretPattern[] = [
     message: 'Google API key (public by design, e.g. Firebase)',
     fix: "Fine to ship, but restrict it to your app's bundle ID / package name and to the APIs it needs in Google Cloud Console.",
   },
+  {
+    id: 'secret/mapbox-secret-token',
+    severity: 'error',
+    pattern: /(?<![\w-])sk\.eyJ[A-Za-z0-9_-]{20,1024}\.[A-Za-z0-9_-]{20,256}(?![\w-])/g,
+    message: 'Mapbox secret token',
+    fix: `Only the public token (pk.) belongs in the app; ${MOVE_TO_SERVER}`,
+  },
   // ↑ Add new patterns here, above this line.
 ];
-// Public by design, never reported: Stripe publishable keys (pk_), Supabase anon keys, Sentry DSNs, RevenueCat public SDK keys.
+// Public by design, never reported: Stripe publishable keys (pk_), Supabase anon keys, Sentry DSNs, RevenueCat public SDK keys,
+// Mapbox public tokens (pk.).
