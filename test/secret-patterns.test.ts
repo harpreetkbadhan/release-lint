@@ -35,7 +35,9 @@ const CASES: Case[] = [
   { rule: 'secret/supabase-service-role', finds: jwt({ role: 'service_role' }), ignores: jwt({ role: 'anon' }) },
   { rule: 'secret/google-api-key', finds: 'AI' + 'za' + 'a'.repeat(35), ignores: 'AI' + 'za' + 'a'.repeat(10) },
   { rule: 'secret/google-oauth-client-secret', finds: 'GOC' + 'SPX-' + 'a'.repeat(28), ignores: '1234-abc.apps.googleusercontent.com' },
+
   { rule: 'secret/mapbox-secret-token', finds: 'sk' + '.eyJ' + 'a'.repeat(60) + '.' + 'b'.repeat(22), ignores: 'pk' + '.eyJ' + 'a'.repeat(60) + '.' + 'b'.repeat(22) },
+  { rule: 'secret/shopify-token', finds: 'shp' + 'at_' + 'a'.repeat(32), ignores: 'shp' + 'xx_' + 'a'.repeat(32) },
 ];
 
 const app = (strings: string[]): AppModel => ({
