@@ -104,7 +104,8 @@ export const SECRET_PATTERNS: readonly SecretPattern[] = [
   { id: 'secret/huggingface-token', severity: 'error', pattern: /(?<![\w-])(?:hf|api_org)_[A-Za-z]{34}(?![\w-])/g, message: 'Hugging Face token', fix: `Hugging Face tokens belong on your server: ${MOVE_TO_SERVER}` },
   { id: 'secret/square-access-token', severity: 'error', pattern: /(?<![\w-])(?:EAAA|sq0atp-)[\w-]{22,60}(?![\w-])/g, message: 'Square access token', fix: `Square access tokens can charge cards and read payments: ${MOVE_TO_SERVER}` },
   { id: 'secret/sentry-auth-token', severity: 'error', pattern: /(?<![\w-])(?:sntryu_[a-f0-9]{64}|sntrys_eyJpYXQiO[A-Za-z0-9+/]{10,200}(?:LCJyZWdpb25fdXJs|InJlZ2lvbl91cmwi|cmVnaW9uX3VybCI6)[A-Za-z0-9+/]{10,200}={0,2}_[A-Za-z0-9+/]{43})(?![A-Za-z0-9+/_-])/g, message: 'Sentry auth token', fix: `Sentry auth tokens upload source maps and read your issues: ${MOVE_TO_SERVER}` },
+  { id: 'secret/supabase-secret-key', severity: 'error', pattern: /(?<![\w-])sb_secret_[A-Za-z0-9_-]{16,256}(?![\w-])/g, message: 'Supabase secret key', fix: `A Supabase secret key bypasses every Row Level Security policy: ${MOVE_TO_SERVER}` },
   // ↑ Add new patterns here, above this line.
 ];
-// Public by design, never reported: Stripe publishable keys (pk_), Supabase anon keys, Sentry DSNs, RevenueCat public SDK keys,
-// Mapbox public tokens (pk.), Square application IDs (sq0idp-).
+// Public by design, never reported: Stripe publishable keys (pk_), Supabase anon keys, Supabase publishable keys (sb_publishable_),
+// Sentry DSNs, RevenueCat public SDK keys, Mapbox public tokens (pk.), Square application IDs (sq0idp-).

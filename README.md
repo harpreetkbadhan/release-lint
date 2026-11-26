@@ -109,7 +109,7 @@ release-lint 0.3.2 · release-lint-demo.aab · Android · com.example.releaselin
 
 | Rule | Severity | What |
 |---|---|---|
-| `secret/*` | error | Stripe secret keys, AWS keys, private keys, OpenAI and Anthropic keys, GitHub and Slack tokens, Slack webhooks, SendGrid keys, Supabase `service_role` keys, Google OAuth client secrets, Mapbox secret tokens, Shopify tokens, Hugging Face tokens, Square access tokens, Sentry auth tokens, in the JS bundle and the Expo config (`extra`) |
+| `secret/*` | error | Stripe secret keys, AWS keys, private keys, OpenAI and Anthropic keys, GitHub and Slack tokens, Slack webhooks, SendGrid keys, Supabase `service_role` keys, Supabase `sb_secret_` keys, Google OAuth client secrets, Mapbox secret tokens, Shopify tokens, Hugging Face tokens, Square access tokens, Sentry auth tokens, in the JS bundle and the Expo config (`extra`) |
 | `secret/stripe-test-secret-key` | warning | A Stripe test secret key |
 | `secret/google-api-key` | info | Google / Firebase API keys: public by design, but should be restricted |
 | `host/*` | warning (error in Expo config) | `localhost`, `10.0.2.2`, private network addresses, ngrok and other tunnels, `.local` / `.test` domains, and staging / dev hosts |
@@ -127,7 +127,7 @@ release-lint 0.3.2 · release-lint-demo.aab · Android · com.example.releaselin
 
 Secrets are masked in every output, and URLs are shown without credentials or query strings, so the report is safe to
 keep in CI logs. Keys that are public by design (Stripe
-`pk_`, Supabase anon keys, Sentry DSNs, RevenueCat public SDK keys, Mapbox `pk.` tokens, Square application IDs (`sq0idp-`)) are never reported. Known SDK sandbox hosts (Apple
+`pk_`, Supabase anon keys, Supabase publishable keys (`sb_publishable_`), Sentry DSNs, RevenueCat public SDK keys, Mapbox `pk.` tokens, Square application IDs (`sq0idp-`)) are never reported. Known SDK sandbox hosts (Apple
 receipt validation, PayPal, Plaid, …) are not reported either.
 
 ## Usage
