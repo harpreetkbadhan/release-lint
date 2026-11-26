@@ -40,6 +40,7 @@ const CASES: Case[] = [
   { rule: 'secret/shopify-token', finds: 'shp' + 'at_' + 'a'.repeat(32), ignores: 'shp' + 'xx_' + 'a'.repeat(32) },
   { rule: 'secret/huggingface-token', finds: 'hf' + '_' + 'a'.repeat(34), ignores: 'hf' + '_' + 'a'.repeat(10) },
   { rule: 'secret/square-access-token', finds: 'sq0' + 'atp-' + 'a'.repeat(22), ignores: 'sq0' + 'idp-' + 'a'.repeat(22) },
+  { rule: 'secret/sentry-auth-token', finds: 'sntry' + 'u_' + 'a'.repeat(64), ignores: 'https://' + 'a'.repeat(32) + '@o123.ingest.sentry.io/456' },
 ];
 
 const app = (strings: string[]): AppModel => ({

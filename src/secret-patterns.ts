@@ -103,6 +103,7 @@ export const SECRET_PATTERNS: readonly SecretPattern[] = [
   { id: 'secret/shopify-token', severity: 'error', pattern: /(?<![\w-])shp(?:at|ca|pa|ss)_[a-fA-F0-9]{32}(?![\w-])/g, message: 'Shopify Admin API token or shared secret', fix: `Shopify Admin API tokens belong on your server: ${MOVE_TO_SERVER}` },
   { id: 'secret/huggingface-token', severity: 'error', pattern: /(?<![\w-])(?:hf|api_org)_[A-Za-z]{34}(?![\w-])/g, message: 'Hugging Face token', fix: `Hugging Face tokens belong on your server: ${MOVE_TO_SERVER}` },
   { id: 'secret/square-access-token', severity: 'error', pattern: /(?<![\w-])(?:EAAA|sq0atp-)[\w-]{22,60}(?![\w-])/g, message: 'Square access token', fix: `Square access tokens can charge cards and read payments: ${MOVE_TO_SERVER}` },
+  { id: 'secret/sentry-auth-token', severity: 'error', pattern: /(?<![\w-])(?:sntryu_[a-f0-9]{64}|sntrys_eyJpYXQiO[A-Za-z0-9+/]{10,200}(?:LCJyZWdpb25fdXJs|InJlZ2lvbl91cmwi|cmVnaW9uX3VybCI6)[A-Za-z0-9+/]{10,200}={0,2}_[A-Za-z0-9+/]{43})(?![A-Za-z0-9+/_-])/g, message: 'Sentry auth token', fix: `Sentry auth tokens upload source maps and read your issues: ${MOVE_TO_SERVER}` },
   // ↑ Add new patterns here, above this line.
 ];
 // Public by design, never reported: Stripe publishable keys (pk_), Supabase anon keys, Sentry DSNs, RevenueCat public SDK keys,
