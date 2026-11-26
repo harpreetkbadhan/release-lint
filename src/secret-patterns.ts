@@ -105,6 +105,7 @@ export const SECRET_PATTERNS: readonly SecretPattern[] = [
   { id: 'secret/square-access-token', severity: 'error', pattern: /(?<![\w-])(?:EAAA|sq0atp-)[\w-]{22,60}(?![\w-])/g, message: 'Square access token', fix: `Square access tokens can charge cards and read payments: ${MOVE_TO_SERVER}` },
   { id: 'secret/sentry-auth-token', severity: 'error', pattern: /(?<![\w-])(?:sntryu_[a-f0-9]{64}|sntrys_eyJpYXQiO[A-Za-z0-9+/]{10,200}(?:LCJyZWdpb25fdXJs|InJlZ2lvbl91cmwi|cmVnaW9uX3VybCI6)[A-Za-z0-9+/]{10,200}={0,2}_[A-Za-z0-9+/]{43})(?![A-Za-z0-9+/_-])/g, message: 'Sentry auth token', fix: `Sentry auth tokens upload source maps and read your issues: ${MOVE_TO_SERVER}` },
   { id: 'secret/supabase-secret-key', severity: 'error', pattern: /(?<![\w-])sb_secret_[A-Za-z0-9_-]{16,256}(?![\w-])/g, message: 'Supabase secret key', fix: `A Supabase secret key bypasses every Row Level Security policy: ${MOVE_TO_SERVER}` },
+  { id: 'secret/groq-api-key', severity: 'error', pattern: /(?<![\w-])gsk_[A-Za-z0-9]{52}(?![\w-])/g, message: 'Groq API key', fix: `Groq API keys let anyone run models on your bill: ${MOVE_TO_SERVER}` },
   // ↑ Add new patterns here, above this line.
 ];
 // Public by design, never reported: Stripe publishable keys (pk_), Supabase anon keys, Supabase publishable keys (sb_publishable_),

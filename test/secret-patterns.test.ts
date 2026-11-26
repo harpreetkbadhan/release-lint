@@ -42,6 +42,7 @@ const CASES: Case[] = [
   { rule: 'secret/square-access-token', finds: 'sq0' + 'atp-' + 'a'.repeat(22), ignores: 'sq0' + 'idp-' + 'a'.repeat(22) },
   { rule: 'secret/sentry-auth-token', finds: 'sntry' + 'u_' + 'a'.repeat(64), ignores: 'https://' + 'a'.repeat(32) + '@o123.ingest.sentry.io/456' },
   { rule: 'secret/supabase-secret-key', finds: 'sb_' + 'secret_' + 'a'.repeat(32), ignores: 'sb_' + 'publishable_' + 'a'.repeat(32) },
+  { rule: 'secret/groq-api-key', finds: 'gsk' + '_' + 'a'.repeat(52), ignores: 'gsk' + '_' + 'a'.repeat(20) },
 ];
 
 const app = (strings: string[]): AppModel => ({
