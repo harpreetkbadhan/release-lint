@@ -38,6 +38,7 @@ const CASES: Case[] = [
 
   { rule: 'secret/mapbox-secret-token', finds: 'sk' + '.eyJ' + 'a'.repeat(60) + '.' + 'b'.repeat(22), ignores: 'pk' + '.eyJ' + 'a'.repeat(60) + '.' + 'b'.repeat(22) },
   { rule: 'secret/shopify-token', finds: 'shp' + 'at_' + 'a'.repeat(32), ignores: 'shp' + 'xx_' + 'a'.repeat(32) },
+  { rule: 'secret/huggingface-token', finds: 'hf' + '_' + 'a'.repeat(34), ignores: 'hf' + '_' + 'a'.repeat(10) },
 ];
 
 const app = (strings: string[]): AppModel => ({

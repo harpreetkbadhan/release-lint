@@ -101,6 +101,7 @@ export const SECRET_PATTERNS: readonly SecretPattern[] = [
     fix: `Only the public token (pk.) belongs in the app; ${MOVE_TO_SERVER}`,
   },
   { id: 'secret/shopify-token', severity: 'error', pattern: /(?<![\w-])shp(?:at|ca|pa|ss)_[a-fA-F0-9]{32}(?![\w-])/g, message: 'Shopify Admin API token or shared secret', fix: `Shopify Admin API tokens belong on your server: ${MOVE_TO_SERVER}` },
+  { id: 'secret/huggingface-token', severity: 'error', pattern: /(?<![\w-])(?:hf|api_org)_[A-Za-z]{34}(?![\w-])/g, message: 'Hugging Face token', fix: `Hugging Face tokens belong on your server: ${MOVE_TO_SERVER}` },
   // ↑ Add new patterns here, above this line.
 ];
 // Public by design, never reported: Stripe publishable keys (pk_), Supabase anon keys, Sentry DSNs, RevenueCat public SDK keys,
