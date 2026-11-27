@@ -29,7 +29,7 @@
     "node": ">=20.19"
   },
   "bin": {
-    "release-lint": "./dist/bin.js"
+    "release-lint": "dist/bin.js"
   },
   "files": [
     "dist"
