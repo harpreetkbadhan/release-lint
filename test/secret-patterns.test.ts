@@ -49,6 +49,7 @@ const CASES: Case[] = [
   { rule: 'secret/npm-token', finds: 'npm' + '_' + 'a'.repeat(36), ignores: 'npm' + '_' + 'a'.repeat(20) },
   { rule: 'secret/notion-token', finds: 'ntn' + '_' + '1'.repeat(11) + 'a'.repeat(35), ignores: 'ntn' + '_' + '1'.repeat(11) },
   { rule: 'secret/twilio-api-key', finds: 'S' + 'K' + 'a'.repeat(32), ignores: 'A' + 'C' + 'a'.repeat(32) },
+  { rule: 'secret/replicate-api-token', finds: 'r8' + '_' + 'a'.repeat(37), ignores: 'r8' + '_' + 'a'.repeat(20) },
 ];
 
 const app = (strings: string[]): AppModel => ({
