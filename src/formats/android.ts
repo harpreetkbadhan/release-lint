@@ -2,6 +2,7 @@ import type { AppModel, DeepLink, NetworkException, XmlElement } from '../types.
 import { parseAxml } from './axml.js';
 import { MAX_BUNDLE_BYTES, MAX_CONFIG_BYTES, readBundle, readExpoConfig, readOptional, sourceMaps } from './common.js';
 import { parseProtoXml } from './proto.js';
+import { parseResourcesArsc, parseResourcesPb } from './resources.js';
 import type { ZipArchive } from './zip.js';
 
 const NETWORK_CONFIG_ROOT = 'network-security-config';
@@ -21,6 +22,10 @@ interface Layout {
   parseManifest: (buf: Buffer) => XmlElement;
   /** XML resources that may hold the network security config. */
   resourceXml: RegExp;
+  /** Name of the resource table file, if the layout has one. */
+  resourceTable: string;
+  /** Parses the resource table into string resources keyed by resource id. */
+  parseResourceTable: (buf: Buffer) => Map<number, string>;
   /** Parses a compiled XML resource; `undefined` for a raw file, which Android never reads as the config. */
   parseResource: (buf: Buffer) => XmlElement | undefined;
 }
@@ -30,6 +35,8 @@ export const AAB_MANIFEST = 'base/manifest/AndroidManifest.xml';
 const AAB: Layout = {
   manifest: AAB_MANIFEST,
   assets: 'base/assets/',
+  resourceTable: 'base/resources.pb',
+  parseResourceTable: parseResourcesPb,
   parseManifest: parseProtoXml,
   resourceXml: /^base\/res\/xml[^/]*\/[^/]+\.xml$/,
   parseResource: parseProtoXml,
@@ -40,6 +47,8 @@ export const APK_MANIFEST = 'AndroidManifest.xml';
 const APK: Layout = {
   manifest: APK_MANIFEST,
   assets: 'assets/',
+  resourceTable: 'resources.arsc',
+  parseResourceTable: parseResourcesArsc,
   parseManifest: (buf) => parseAxml(buf),
   resourceXml: /^res\/(?:xml[^/]*\/)?[^/]+\.xml$/,
   parseResource: (buf) => (buf.length >= 2 && buf.readUInt16LE(0) === AXML_MAGIC ? parseAxml(buf, { root: NETWORK_CONFIG_ROOT }) : undefined),
@@ -74,6 +83,20 @@ async function readAndroid(zip: ZipArchive, file: string, layout: Layout): Promi
   const expoConfig = await readOptional(zip, configName, problems, (buf) => readExpoConfig(configName, buf), MAX_CONFIG_BYTES);
   const networkExceptions = await readNetworkExceptions(zip, layout, problems);
   const updates = application ? updatesChannel(application, layout.manifest) : undefined;
+  const deepLinks = application ? intentFilterHosts(application, layout.manifest) : [];
+  // A host written as @string/... reaches the model as a resource
+  // reference (@0x...). Resolve it through the resource table so the
+  // deep link rules see the real host; anything still unresolved
+  // keeps its reference and is reported by deeplink/unresolved-host.
+  const resourceTable = await readOptional(zip, layout.resourceTable, problems, (buf) => layout.parseResourceTable(buf), MAX_CONFIG_BYTES);
+  if (resourceTable) {
+    for (const link of deepLinks) {
+      if (link.host.startsWith('@0x') && link.host.length === 11) {
+        const resolved = resourceTable.get(Number.parseInt(link.host.slice(3), 16));
+        if (resolved !== undefined) link.host = resolved;
+      }
+    }
+  }
 
   return {
     platform: 'android',
@@ -87,7 +110,7 @@ async function readAndroid(zip: ZipArchive, file: string, layout: Layout): Promi
       ...(networkSecurityConfig ? { networkSecurityConfig } : {}),
     },
     ...(minSdk !== undefined ? { minSdk } : {}),
-    deepLinks: application ? intentFilterHosts(application, layout.manifest) : [],
+    deepLinks,
     ...(networkExceptions.length > 0 ? { networkExceptions } : {}),
     ...(updates ? { updates } : {}),
     ...(bundle ? { bundle } : {}),
