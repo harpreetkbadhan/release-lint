@@ -52,8 +52,7 @@ const CASES: Case[] = [
 ];
 
 const app = (strings: string[]): AppModel => ({
-  platform: 'android',
-  
+  platform: 'android',  
   file: 'demo.aab',
   appId: 'com.example.demo',
   version: '1.0.0',
