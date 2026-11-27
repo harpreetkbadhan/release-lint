@@ -11,7 +11,7 @@ interface Text {
 /** Runs every rule and returns the findings, errors first. */
 export function runRules(app: AppModel, options: RuleOptions): Finding[] {
   const texts = collectTexts(app);
-  const findings = [...secretRules(texts), ...hostRules(texts, options), ...deepLinkRules(app, options), ...networkRules(app, options), ...updatesRules(app), ...releaseRules(app)];
+  const findings = [...secretRules(texts), ...hostRules(texts, options), ...deepLinkRules(app, options), ...permissionUsageRules(app), ...networkRules(app, options), ...updatesRules(app), ...releaseRules(app)];
   const rank = (s: Severity) => SEVERITIES.indexOf(s);
   return findings.map((f, i) => ({ f, i })).sort((a, b) => rank(b.f.severity) - rank(a.f.severity) || a.i - b.i).map(({ f }) => f);
 }
@@ -171,6 +171,55 @@ function hostRules(texts: Text[], { allowHosts }: RuleOptions): Finding[] {
 }
 
 // ---------------------------------------------------------------- deep links
+
+// ---------------------------------------------------------------- permission usage descriptions
+
+/** A usage description that gives the user nothing to go on: an unresolved build variable, an Xcode placeholder, a TODO, or a bare 'Allow X to access your Y' with no reason. */
+const PLACEHOLDER_USAGE_PATTERNS = [
+  /TODO|FIXME/i,
+  /lorem ipsum/i,
+];
+
+const GENERIC_ACCESS_PATTERN =
+  /^Allow .+ to access your (camera|photos?|photo library|microphone|location|contacts?|calendar|reminders|health|motion|bluetooth|siri|speech|face ?id|notifications?)[.!]?$/i;
+
+function isPlaceholderUsageDescription(text: string, key: string): boolean {
+  const trimmed = text.trim();
+  const lower = trimmed.toLowerCase();
+  if (lower === key.toLowerCase() || lower === 'description' || lower === 'placeholder') return true;
+  if (trimmed.includes('$(') || trimmed.includes('${') || trimmed.includes('<#')) return true;
+  return PLACEHOLDER_USAGE_PATTERNS.some((pattern) => pattern.test(trimmed)) || GENERIC_ACCESS_PATTERN.test(trimmed);
+}
+
+/**
+ * Scoped first step of issue #42: flag placeholder or empty usage-description texts in Info.plist. It does not check whether a used capability is missing a description.
+ */
+function permissionUsageRules(app: AppModel): Finding[] {
+  const findings: Finding[] = [];
+  for (const description of app.permissionUsageDescriptions ?? []) {
+    const at = { location: `${description.file} (${description.key})` };
+    if (description.text.trim() === '') {
+      findings.push({
+        ruleId: 'permission/empty-usage-description',
+        severity: 'warning',
+        message: `Permission usage description ${description.key} is empty, so iOS shows a blank permission prompt.`,
+        evidence: description.key,
+        ...at,
+        fix: `Write a specific reason in ${description.key} explaining why the app needs this permission.`,
+      });
+    } else if (isPlaceholderUsageDescription(description.text, description.key)) {
+      findings.push({
+        ruleId: 'permission/placeholder-usage-description',
+        severity: 'warning',
+        message: `Permission usage description ${description.key} looks like a placeholder: '${description.text}'.`,
+        evidence: description.text,
+        ...at,
+        fix: `Replace the placeholder in ${description.key} with a specific reason why the app needs this permission.`,
+      });
+    }
+  }
+  return findings;
+}
 
 function deepLinkRules(app: AppModel, { allowHosts }: RuleOptions): Finding[] {
   return app.deepLinks.flatMap(({ host, kind, file }): Finding[] => {
