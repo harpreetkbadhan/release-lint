@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.10
 
 - New rule `secret/discord-webhook`: Discord webhook URLs, which let anyone post to your channel. Thanks
   [@tarekooooooo](https://github.com/tarekooooooo) (#44), closing good first issue #32.
@@ -11,6 +11,12 @@
 - New rule `secret/twilio-api-key`: Twilio API keys (`SK…`), which let anyone send SMS on your bill. Account SIDs
   (`AC…`) only identify the account and are not reported. Thanks [@tarekooooooo](https://github.com/tarekooooooo)
   (#47), closing good first issue #34.
+- New rule `secret/replicate-api-token`: Replicate API tokens (`r8_`), which let anyone run models on your account.
+  Thanks [@tarekooooooo](https://github.com/tarekooooooo) (#49), closing good first issue #30.
+- New rule `secret/resend-api-key`: Resend API keys (`re_`), which let anyone send email from your domain. Thanks
+  [@tarekooooooo](https://github.com/tarekooooooo) (#50), closing good first issue #31.
+- New rule `secret/brevo-api-key`: Brevo (Sendinblue) API keys (`xkeysib-`), which let anyone send from your account
+  and read your contacts. Thanks [@tarekooooooo](https://github.com/tarekooooooo) (#48), closing good first issue #33.
 
 ## 0.3.9
 

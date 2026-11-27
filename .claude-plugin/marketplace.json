@@ -10,7 +10,7 @@
       "name": "app-release-lint",
       "source": "./",
       "description": "Check a built .ipa, .aab or .apk for release mistakes before you upload it, and fix each finding at its source.",
-      "version": "0.3.9"
+      "version": "0.3.10"
     }
   ]
 }

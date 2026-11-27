@@ -1,6 +1,6 @@
 {
   "name": "app-release-lint",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "description": "Check a built iOS or Android app (.ipa, .aab, .apk) for release mistakes before you upload it: leaked secret keys, staging or localhost URLs, staging deep links, debug builds and source maps. Fixes each finding at its source.",
   "author": {
     "name": "Harpreet Kumar",

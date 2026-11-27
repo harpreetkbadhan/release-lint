@@ -58,3 +58,9 @@ third-party app, or a file someone sent you.
 ## Pull requests
 
 Conventional commit messages (`feat:`, `fix:`, `docs:`, …), one change per pull request, and `npm test` passing.
+Please write titles, descriptions and comments in English, so every contributor and reviewer can follow along.
+
+Before marking a pull request ready, run `npm test` and `npm run typecheck` yourself. For a change to a parser in
+`src/formats/`, also run `node dist/bin.js` on a real app build (your own, or one from `node benchmark/download.mjs`)
+and say in the pull request what you checked. Synthetic test files can share the parser's mistakes; a real build
+can't.

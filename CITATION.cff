@@ -5,8 +5,8 @@ type: software
 authors:
   - given-names: Harpreet
     family-names: Kumar
-version: 0.3.9
-date-released: 2026-11-26
+version: 0.3.10
+date-released: 2026-11-27
 license: MIT
 repository-code: https://github.com/harpreetkbadhan/release-lint
 url: https://www.npmjs.com/package/app-release-lint
