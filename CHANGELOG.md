@@ -8,6 +8,9 @@
   [@daocuong11](https://github.com/daocuong11) (#45), closing good first issue #35.
 - New rule `secret/notion-token`: Notion integration tokens (`ntn_`), which can read and edit the pages shared with
   them. Thanks [@daocuong11](https://github.com/daocuong11) (#46), closing good first issue #37.
+- New rule `secret/twilio-api-key`: Twilio API keys (`SK…`), which let anyone send SMS on your bill. Account SIDs
+  (`AC…`) only identify the account and are not reported. Thanks [@tarekooooooo](https://github.com/tarekooooooo)
+  (#47), closing good first issue #34.
 
 ## 0.3.9
 
