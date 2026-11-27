@@ -110,6 +110,7 @@ export const SECRET_PATTERNS: readonly SecretPattern[] = [
   { id: 'secret/groq-api-key', severity: 'error', pattern: /(?<![\w-])gsk_[A-Za-z0-9]{52}(?![\w-])/g, message: 'Groq API key', fix: `Groq API keys let anyone run models on your bill: ${MOVE_TO_SERVER}` },
   { id: 'secret/perplexity-api-key', severity: 'error', pattern: /(?<![\w-])pplx-[A-Za-z0-9]{48}(?![\w-])/g, message: 'Perplexity API key', fix: `Perplexity API keys let anyone use your API credits: ${MOVE_TO_SERVER}` },
   { id: 'secret/posthog-api-key', severity: 'error', pattern: /(?<![\w-])ph[xs]_[A-Za-z0-9_]{30,100}(?![\w-])/g, message: 'PostHog personal or project secret API key', fix: `PostHog personal and project secret keys can read and delete your analytics data. The app only needs the project token (phc_): ${MOVE_TO_SERVER}` },
+  { id: 'secret/discord-webhook', severity: 'error', pattern: /(?<![\w-])https:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/api\/webhooks\/[0-9]{17,20}\/[\w-]{60,80}(?![\w-])/g, message: 'Discord webhook URL', fix: `Anyone can post to your Discord channel with it: ${MOVE_TO_SERVER}` },
   // ↑ Add new patterns here, above this line.
 ];
 // Public by design, never reported: Stripe publishable keys (pk_), Supabase anon keys, Supabase publishable keys (sb_publishable_),
