@@ -91,7 +91,7 @@ async function readAndroid(zip: ZipArchive, file: string, layout: Layout): Promi
   const resourceTable = await readOptional(zip, layout.resourceTable, problems, (buf) => layout.parseResourceTable(buf), MAX_CONFIG_BYTES);
   if (resourceTable) {
     for (const link of deepLinks) {
-      if (link.host.startsWith('@0x') && link.host.length === 12) {
+      if (link.host.startsWith('@0x') && link.host.length === 11) {
         const resolved = resourceTable.get(Number.parseInt(link.host.slice(3), 16));
         if (resolved !== undefined) link.host = resolved;
       }
