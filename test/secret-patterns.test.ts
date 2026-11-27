@@ -50,6 +50,7 @@ const CASES: Case[] = [
   { rule: 'secret/notion-token', finds: 'ntn' + '_' + '1'.repeat(11) + 'a'.repeat(35), ignores: 'ntn' + '_' + '1'.repeat(11) },
   { rule: 'secret/twilio-api-key', finds: 'S' + 'K' + 'a'.repeat(32), ignores: 'A' + 'C' + 'a'.repeat(32) },
   { rule: 'secret/replicate-api-token', finds: 'r8' + '_' + 'a'.repeat(37), ignores: 'r8' + '_' + 'a'.repeat(20) },
+  { rule: 'secret/resend-api-key', finds: 're' + '_' + 'a'.repeat(8) + '_' + 'b'.repeat(24), ignores: 're' + '_' + 'a'.repeat(8) },
   { rule: 'secret/brevo-api-key', finds: 'xkeysib' + '-' + 'a'.repeat(64) + '-' + 'b'.repeat(16), ignores: 'xkeysib' + '-' + 'a'.repeat(20) },
 ];
 
