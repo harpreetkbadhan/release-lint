@@ -111,7 +111,7 @@ release-lint 0.3.2 · release-lint-demo.aab · Android · com.example.releaselin
 
 | Rule | Severity | What |
 |---|---|---|
-| `secret/*` | error | Stripe secret keys, AWS keys, private keys, OpenAI and Anthropic keys, GitHub and Slack tokens, Slack webhooks, SendGrid keys, Supabase `service_role` keys, Supabase `sb_secret_` keys, Google OAuth client secrets, Mapbox secret tokens, Shopify tokens, Hugging Face tokens, Square access tokens, Sentry auth tokens, Groq API keys, Perplexity API keys, PostHog personal and project secret keys, in the JS bundle and the Expo config (`extra`) |
+| `secret/*` | error | Stripe secret keys, AWS keys, private keys, OpenAI and Anthropic keys, GitHub and Slack tokens, Slack webhooks, SendGrid keys, Supabase `service_role` keys, Supabase `sb_secret_` keys, Google OAuth client secrets, Mapbox secret tokens, Shopify tokens, Hugging Face tokens, Square access tokens, Sentry auth tokens, Groq API keys, Perplexity API keys, PostHog personal and project secret keys, Discord Webhook URLs, in the JS bundle and the Expo config (`extra`) |
 | `secret/stripe-test-secret-key` | warning | A Stripe test secret key |
 | `secret/google-api-key` | info | Google / Firebase API keys: public by design, but should be restricted |
 | `host/*` | warning (error in Expo config) | `localhost`, `10.0.2.2`, private network addresses, ngrok and other tunnels, `.local` / `.test` domains, and staging / dev hosts |
