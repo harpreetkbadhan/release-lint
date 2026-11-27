@@ -198,6 +198,19 @@ steps:
       sarif_file: release-lint.sarif
 ```
 
+**GitLab CI**, as a job after the build job (the build job must pass the .aab along as an artifact):
+
+```yaml
+release-lint:
+  stage: test
+  image: node:24
+  needs: [build]
+  script:
+    - npx app-release-lint@0 path/to/app.aab
+```
+
+The job fails when release-lint exits with 1, that is when a finding is at or above `--fail-on` (error by default).
+
 **Any other CI:** `npx app-release-lint@0 path/to/app.aab`. Exit code 1 fails the step.
 
 **EAS Build:** a build hook in `package.json` runs it on the build worker after every successful Android build (the path
