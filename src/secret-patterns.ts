@@ -114,7 +114,8 @@ export const SECRET_PATTERNS: readonly SecretPattern[] = [
   { id: 'secret/npm-token', severity: 'error', pattern: /(?<![\w-])npm_[A-Za-z0-9]{36}(?![\w-])/g, message: 'npm access token', fix: `An npm token lets anyone publish packages as you: ${MOVE_TO_SERVER}` },
   { id: 'secret/notion-token', severity: 'error', pattern: /(?<![\w-])ntn_[0-9]{11}[A-Za-z0-9]{35}(?![\w-])/g, message: 'Notion integration token', fix: `A Notion token lets anyone read and edit the pages shared with it: ${MOVE_TO_SERVER}` },
   { id: 'secret/twilio-api-key', severity: 'error', pattern: /(?<![\w+/-])SK[0-9a-fA-F]{32}(?![\w+/=-])/g, message: 'Twilio API key', fix: `Twilio API keys let anyone send SMS on your bill: ${MOVE_TO_SERVER}` },
-  // ↑ Add new patterns here, above this line.
+  { id: 'secret/resend-api-key', severity: 'error', pattern: /(?<![\w-])re_[1-9A-HJ-NP-Za-km-z]{8}_[1-9A-HJ-NP-Za-km-z]{24}(?![\w-])/g, message: 'Resend API key', fix: `A Resend key lets anyone send email from your domain: ${MOVE_TO_SERVER}` },
+// ↑ Add new patterns here, above this line.
 ];
 // Public by design, never reported: Stripe publishable keys (pk_), Supabase anon keys, Supabase publishable keys (sb_publishable_),
 // Sentry DSNs, RevenueCat public SDK keys, Mapbox public tokens (pk.), Square application IDs (sq0idp-), PostHog project tokens (phc_).
