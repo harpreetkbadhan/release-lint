@@ -116,6 +116,8 @@ release-lint 0.3.2 · release-lint-demo.aab · Android · com.example.releaselin
 | `secret/google-api-key` | info | Google / Firebase API keys: public by design, but should be restricted |
 | `host/*` | warning (error in Expo config) | `localhost`, `10.0.2.2`, private network addresses, ngrok and other tunnels, `.local` / `.test` domains, and staging / dev hosts |
 | `deeplink/non-production-host` | error | Staging, dev, localhost or private hosts in the **signed** iOS associated domains or Android intent filters |
+| `| `permission/empty-usage-description` | warning | An iOS NS*UsageDescription in Info.plist that is empty |
+| | `permission/placeholder-usage-description` | warning | An iOS NS*UsageDescription that is a placeholder: an unresolved $(...) variable, a TODO, lorem ipsum, or a bare 'Allow ... to access your ...' with no reason |
 | `updates/non-production-channel` | error | An Expo app built to get over-the-air updates (EAS Update) from a `preview`, `staging`, `development`, `beta`, … channel: tester updates would reach your users |
 | `debug/debuggable` | error | Android `android:debuggable`, or a development-signed iOS build (`get-task-allow`) |
 | `debug/dev-bundle` | error | A development JavaScript bundle (`__DEV__` is true) |
@@ -327,7 +329,7 @@ narrower job: a few seconds, no setup, in any CI step, and a short list of relea
 
 - Android hosts written as resource references (`@string/…`) are reported but not resolved yet.
 - Native code (`classes.dex`, the iOS executable's strings) is not scanned for secrets: SDKs make that too noisy.
-- Permission checks and online validation of `apple-app-site-association` / `assetlinks.json` are planned.
+- Permission checks are limited to placeholder or empty iOS usage descriptions; online validation of `apple-app-site-association` / `assetlinks.json` is planned.
 
 ---
 
