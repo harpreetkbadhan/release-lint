@@ -1,4 +1,4 @@
-import { ReleaseLintError, type AppModel, type DeepLink, type NetworkException } from '../types.js';
+import { ReleaseLintError, type AppModel, type DeepLink, type NetworkException, type PermissionUsageDescription } from '../types.js';
 import { MAX_BUNDLE_BYTES, MAX_CONFIG_BYTES, readBundle, readExpoConfig, readOptional, sourceMaps } from './common.js';
 import { readEntitlements } from './macho.js';
 import { isPlistDict, parsePlist, type PlistDict, type PlistValue } from './plist.js';
@@ -40,6 +40,7 @@ export async function readIpa(zip: ZipArchive, file: string, { exported = true }
   const getTaskAllow = exported ? entitlements?.['get-task-allow'] : undefined;
   const simulator = info['DTPlatformName'] === 'iphonesimulator';
   const networkExceptions = atsExceptions(ats, infoName);
+  const permissionUsageDescriptions = usageDescriptions(info, infoName);
 
   return {
     platform: 'ios',
@@ -53,6 +54,7 @@ export async function readIpa(zip: ZipArchive, file: string, { exported = true }
       ...(simulator ? { simulator } : {}),
     },
     deepLinks: entitlements ? associatedDomains(entitlements, executable) : [],
+    ...(permissionUsageDescriptions.length > 0 ? { permissionUsageDescriptions } : {}),
     ...(networkExceptions.length > 0 ? { networkExceptions } : {}),
     ...(updates ? { updates } : {}),
     ...(bundle ? { bundle } : {}),
@@ -87,6 +89,13 @@ function atsExceptions(ats: PlistValue | undefined, file: string): NetworkExcept
 }
 
 /** `applinks:example.com?mode=developer` → `{ kind: 'applinks', host: 'example.com' }`. */
+/** Every NS*UsageDescription entry in Info.plist, in plist order. */
+function usageDescriptions(info: PlistDict, file: string): PermissionUsageDescription[] {
+  return Object.entries(info).flatMap(([key, value]): PermissionUsageDescription[] =>
+    key.endsWith('UsageDescription') && typeof value === 'string' ? [{ key, text: value, file }] : [],
+  );
+}
+
 function associatedDomains(entitlements: PlistDict, file: string): DeepLink[] {
   const domains = entitlements[ASSOCIATED_DOMAINS];
   if (!Array.isArray(domains)) {
