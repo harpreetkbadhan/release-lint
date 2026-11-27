@@ -57,6 +57,16 @@ export interface DeepLink {
   file: string;
 }
 
+/** One NS*UsageDescription entry from an iOS Info.plist. */
+export interface PermissionUsageDescription {
+  /** The Info.plist key, such as NSCameraUsageDescription. */
+  key: string;
+  /** The description text as written in Info.plist. */
+  text: string;
+  /** Archive entry the description was read from. */
+  file: string;
+}
+
 export interface JsBundle {
   file: string;
   kind: 'hermes' | 'javascript';
@@ -88,6 +98,8 @@ export interface AppModel {
   /** Android `uses-sdk` `android:minSdkVersion`, when it is a number. */
   minSdk?: number;
   deepLinks: DeepLink[];
+  /** iOS permission usage descriptions (NS*UsageDescription) from Info.plist, when the app has any. */
+  permissionUsageDescriptions?: PermissionUsageDescription[];
   /** Present only when the app has any. */
   networkExceptions?: NetworkException[];
   /** An iOS .app or .xcarchive folder: Xcode signs it again on export, so its signing is not judged. */
