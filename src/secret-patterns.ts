@@ -113,7 +113,8 @@ export const SECRET_PATTERNS: readonly SecretPattern[] = [
   { id: 'secret/discord-webhook', severity: 'error', pattern: /(?<![\w-])https:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/api\/webhooks\/[0-9]{17,20}\/[\w-]{60,80}(?![\w-])/g, message: 'Discord webhook URL', fix: `Anyone can post to your Discord channel with it: ${MOVE_TO_SERVER}` },
   { id: 'secret/npm-token', severity: 'error', pattern: /(?<![\w-])npm_[A-Za-z0-9]{36}(?![\w-])/g, message: 'npm access token', fix: `An npm token lets anyone publish packages as you: ${MOVE_TO_SERVER}` },
   { id: 'secret/notion-token', severity: 'error', pattern: /(?<![\w-])ntn_[0-9]{11}[A-Za-z0-9]{35}(?![\w-])/g, message: 'Notion integration token', fix: `A Notion token lets anyone read and edit the pages shared with it: ${MOVE_TO_SERVER}` },
+  { id: 'secret/brevo-api-key', severity: 'error', pattern: /(?<![\w-])xkeysib-[a-f0-9]{64}-[A-Za-z0-9]{16}(?![\w-])/g, message: 'Brevo API key', fix: `A Brevo key lets anyone send from your account and read your contacts: ${MOVE_TO_SERVER}` },
   // ↑ Add new patterns here, above this line.
-];
+  ];
 // Public by design, never reported: Stripe publishable keys (pk_), Supabase anon keys, Supabase publishable keys (sb_publishable_),
 // Sentry DSNs, RevenueCat public SDK keys, Mapbox public tokens (pk.), Square application IDs (sq0idp-), PostHog project tokens (phc_).
