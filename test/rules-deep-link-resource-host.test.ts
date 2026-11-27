@@ -236,7 +236,7 @@ describe('deep link hosts written as resource references', () => {
       }),
     );
     const app = await readApp(file);
-    expect(app.deepLinks).toEqual([{ host: 'staging.example.com', kind: 'intent-filter', file: 'AndroidManifest.xml' }]);
+    expect(app.deepLinks).toEqual([{ host: 'staging.example.com', kind: 'intent-filter', file: 'base/manifest/AndroidManifest.xml' }]);
     expect(runRules(app, { allowHosts: [] }).map((finding) => finding.ruleId)).toContain('deeplink/non-production-host');
   });
 
